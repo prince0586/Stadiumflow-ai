@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, Type } from "@google/genai";
 
 /**
  * Interface for the response from the Fan Interaction Agent.
@@ -29,102 +29,93 @@ export interface VenueTelemetry {
 /**
  * Agentic-Core: Multi-Agent System for Stadium Coordination.
  * 
- * This module implements two distinct agents:
- * 1. Venue Telemetry Agent: Monitors and interprets mock sensor data.
- * 2. Fan Interaction Agent: Handles conversational requests from attendees.
+ * Optimized for AI Studio: Calls Gemini directly from the frontend
+ * using the platform-provided environment keys.
  */
 export class StadiumAgents {
   private ai: GoogleGenAI;
 
-  /**
-   * Initializes the StadiumAgents with the provided API key.
-   * 
-   * @param apiKey The Gemini API key retrieved from process.env.
-   */
-  constructor(apiKey: string) {
+  constructor() {
+    // API Key is automatically provided by the AI Studio environment
+    const apiKey = process.env.GEMINI_API_KEY || "";
     this.ai = new GoogleGenAI({ apiKey });
   }
 
   /**
    * Processes fan queries using the Fan Interaction Agent.
-   * 
-   * @param query The fan's natural language question.
-   * @param telemetry Current venue telemetry to provide context-aware answers.
-   * @returns A structured promise containing the agent's advice.
+   * Utilizes Gemini 3.1 Pro with Search Grounding for real-time venue accuracy.
    */
   async getFanAdvice(query: string, telemetry: VenueTelemetry): Promise<FanResponse> {
+    if (!process.env.GEMINI_API_KEY) {
+      return { message: "System Alert: API Gateway Offline. Please configure GEMINI_API_KEY in platform settings." };
+    }
+
     const systemInstruction = `
-      You are the 'StadiumFlow Fan Concierge', an elite AI assistant for a large-scale sporting venue.
-      Your primary goal is to minimize waiting times and solve logistical challenges for fans.
+      You are 'StadiumFlow Fan Concierge', an elite AI assistant for high-capacity venue logistics.
+      Goal: Minimize attendee friction, optimize dispersal, and ensure safety.
       
-      Current Venue Status (Telemetry):
-      - Gate A: ${telemetry.gateA}% congestion
-      - Gate B: ${telemetry.gateB}% congestion
-      - Food Court: ${telemetry.foodCourt}% occupancy
-      - VIP Concourse: ${telemetry.concourseLevel1}% density
-      - Parking Zone C: ${telemetry.parkingZoneC}% occupancy
+      TELEMETRY FEED: ${JSON.stringify(telemetry)}
       
-      Instructions:
-      1. Be professional, conversational, and hyper-efficient.
-      2. If a fan asks for food or exits, recommend the path with the LOWEST congestion.
-      3. Always provide an estimated waiting time if applicable.
-      4. If the situation is critical, provide a 'Suggested Action'.
-      5. Address accessibility (e.g., mention elevators if relevant).
+      CORE PROTOCOLS:
+      1. CRITICAL: Analyze telemetry to redirect attendees from High-Density zones (>80%).
+      2. LOGISTICAL: Recommend specific routes and provide estimated wait times (monospaced).
+      3. TACTICAL: If asked about amenities, use Search to provide real-time updates if available.
+      4. OUTPUT: Strictly valid JSON. { "message": string, "suggestedAction": string, "waitingTimeEstimate": string }.
     `;
 
     try {
       const response = await this.ai.models.generateContent({
-        model: "gemini-3-flash-preview",
+        model: "gemini-3.1-pro-preview",
         contents: query,
         config: {
           systemInstruction,
+          tools: [{ googleSearch: {} }],
           responseMimeType: "application/json",
+          responseSchema: {
+            type: Type.OBJECT,
+            properties: {
+              message: { type: Type.STRING },
+              suggestedAction: { type: Type.STRING },
+              waitingTimeEstimate: { type: Type.STRING }
+            },
+            required: ["message"]
+          }
         },
       });
 
-      const result = JSON.parse(response.text || "{}");
-      return {
-        message: result.message || "I'm processing the latest stadium data...",
-        suggestedAction: result.suggestedAction,
-        waitingTimeEstimate: result.waitingTimeEstimate,
-      };
+      return JSON.parse(response.text || "{}");
     } catch (error) {
       console.error("Fan Agent Error:", error);
-      throw new Error("Failed to communicate with stadium intelligence.");
+      return { message: "Internal Neural Link Failure. Retrying coordination..." };
     }
   }
 
   /**
    * Generates a status summary for the Staff Command Center.
-   * 
-   * @param telemetry The latest sensor data.
-   * @returns A high-level assessment of crowd movement and coordination status.
+   * Uses Gemini 3.1 Pro for high-reasoning anomaly detection.
    */
   async getStaffSummary(telemetry: VenueTelemetry): Promise<string> {
+    if (!process.env.GEMINI_API_KEY) return "GATEWAY_TIMEOUT: NO_API_KEY";
+
     const systemInstruction = `
-      You are the 'StadiumFlow Venue Telemetry Agent'. Your role is to analyze sensor data
-      at scale to detect bottlenecks, security incidents, or coordination failures.
-      
-      You must produce a concise, high-priority summary for the venue commander.
-      Focus on:
-      1. Traffic flow anomalies.
-      2. Resource reallocation needs.
-      3. Critical bottlenecks.
+      You are 'StadiumFlow Core Intelligence'. Analyze spatial telemetry for commanders.
+      Detect: Bottlenecks, illegal dispersal patterns, or security anomalies.
+      Style: Tactical, brief, data-driven.
     `;
 
-    const prompt = `Analyze the current telemetry: ${JSON.stringify(telemetry)}. What are the 3 most critical points for coordination right now?`;
+    const prompt = `AUDIT CURRENT TELEMETRY: ${JSON.stringify(telemetry)}. GEN 1-LINE SUMMARY.`;
 
     try {
       const response = await this.ai.models.generateContent({
-        model: "gemini-3-flash-preview",
+        model: "gemini-3.1-pro-preview",
         contents: prompt,
         config: { systemInstruction },
       });
 
-      return response.text || "No critical alerts at the moment.";
+      return response.text || "NO CRITICAL ANOMALIES DETECTED.";
     } catch (error) {
       console.error("Staff Agent Error:", error);
-      return "Unable to generate real-time telemetry assessment.";
+      return "TELEMETRY ANALYSIS SUSPENDED // LINK ERROR";
     }
   }
 }
