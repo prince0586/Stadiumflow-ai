@@ -1,7 +1,7 @@
 import React from "react";
 import { motion } from "motion/react";
 
-export function ZoneItem({ label, value }: { label: string; value: number }) {
+export function ZoneItem({ label, value }: { label: string; value: number; key?: string | number }) {
   const color = value > 80 ? "bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.4)]" : value > 50 ? "bg-sky-400" : "bg-green-400";
   return (
     <div className="space-y-1.5 group cursor-default" role="listitem" tabIndex={0}>

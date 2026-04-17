@@ -60,6 +60,15 @@
   @apply opacity-100;
 }
 
+/* Visible grid borders—don't hide the structure, celebrate it */
+.tactical-row {
+  @apply flex items-center justify-between py-3 border-b border-[var(--border-main)] transition-all duration-300 cursor-pointer;
+}
+
+.tactical-row:hover {
+  @apply bg-sky-500/5 px-2;
+}
+
 .data-label {
   @apply text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] font-serif italic;
 }

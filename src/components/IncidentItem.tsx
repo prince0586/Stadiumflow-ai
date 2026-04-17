@@ -10,7 +10,8 @@ export function IncidentItem({
   type: "critical" | "warning" | "info"; 
   time: string; 
   zone: string; 
-  msg: string 
+  msg: string;
+  key?: string | number;
 }) {
   const borderColor = {
     critical: "border-rose-500/50",

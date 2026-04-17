@@ -1,3 +1,4 @@
+import { User } from "firebase/auth";
 import { VenueTelemetry } from "./lib/agents";
 
 export type AppRole = "fan" | "staff";
@@ -17,4 +18,5 @@ export interface ComponentProps {
   telemetry: VenueTelemetry;
   historicalData?: any[];
   theme?: "light" | "dark";
+  user?: User | null;
 }

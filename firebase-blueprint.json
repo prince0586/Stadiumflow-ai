@@ -1,0 +1,64 @@
+{
+  "entities": {
+    "Telemetry": {
+      "title": "Venue Telemetry",
+      "description": "Real-time occupancy and wait time data for stadium sectors.",
+      "type": "object",
+      "properties": {
+        "gateA": { "type": "number", "description": "Gate A occupancy %" },
+        "gateB": { "type": "number", "description": "Gate B occupancy %" },
+        "foodCourt": { "type": "number", "description": "Food court congestion %" },
+        "concourseLevel1": { "type": "number", "description": "Concourse level 1 load %" },
+        "parkingZoneC": { "type": "number", "description": "Parking zone C capacity %" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["gateA", "gateB", "foodCourt", "concourseLevel1", "parkingZoneC", "timestamp"]
+    },
+    "Incident": {
+      "title": "Tactical Incident",
+      "description": "Security or operational anomaly log entry.",
+      "type": "object",
+      "properties": {
+        "type": { "type": "string", "enum": ["critical", "warning", "info"] },
+        "time": { "type": "string" },
+        "zone": { "type": "string" },
+        "msg": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["type", "time", "zone", "msg", "createdAt"]
+    },
+    "ChatMessage": {
+      "title": "Chat Message",
+      "description": "Interaction between a fan and the AI concierge.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "role": { "type": "string", "enum": ["user", "assistant"] },
+        "content": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "metadata": {
+          "type": "object",
+          "properties": {
+            "action": { "type": "string" },
+            "wait": { "type": "string" }
+          }
+        }
+      },
+      "required": ["userId", "role", "content", "timestamp"]
+    }
+  },
+  "firestore": {
+    "/telemetry/live": {
+      "schema": { "$ref": "#/entities/Telemetry" },
+      "description": "Singleton document containing the active venue state."
+    },
+    "/incidents/{incidentId}": {
+      "schema": { "$ref": "#/entities/Incident" },
+      "description": "Collection of tactical logs."
+    },
+    "/users/{userId}/chats/{chatId}": {
+      "schema": { "$ref": "#/entities/ChatMessage" },
+      "description": "Localized fan-concierge interaction history."
+    }
+  }
+}
