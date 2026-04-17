@@ -174,7 +174,7 @@ export default function App() {
               exit={{ opacity: 0 }} 
               className="absolute inset-0"
             >
-              <StaffView agents={agentsRef.current} telemetry={telemetry} historicalData={historicalData} />
+              <StaffView agents={agentsRef.current} telemetry={telemetry} historicalData={historicalData} theme={theme} />
             </motion.div>
           )}
         </AnimatePresence>
@@ -343,11 +343,13 @@ function FanView({ agents, telemetry }: { agents: StadiumAgents | null; telemetr
 function StaffView({ 
   agents, 
   telemetry, 
-  historicalData 
+  historicalData,
+  theme
 }: { 
   agents: StadiumAgents | null; 
   telemetry: VenueTelemetry;
   historicalData: any[];
+  theme: "light" | "dark";
 }) {
   const [aiSummary, setAiSummary] = useState("Analyzing telemetry...");
   const [isEmergency, setIsEmergency] = useState(false);
