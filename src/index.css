@@ -1,0 +1,55 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", "Geist", "SF Pro Text", -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", monospace;
+  --font-display: "Inter", sans-serif;
+
+  /* Geometric Balance Colors */
+  --color-slate-50: #f8fafc;
+  --color-slate-400: #94a3b8;
+  --color-slate-700: #334155;
+  --color-slate-800: #1e293b;
+  --color-slate-900: #0f172a;
+  --color-sky-400: #38bdf8;
+  --color-green-400: #4ade80;
+  --color-rose-500: #f43f5e;
+}
+
+@layer base {
+  body {
+    @apply bg-slate-900 text-slate-50 antialiased selection:bg-sky-400/30;
+  }
+}
+
+/* Geometric Balance Core Patterns */
+.geometric-grid {
+  @apply bg-slate-700 gap-[1px] grid;
+}
+
+.geometric-card {
+  @apply bg-slate-800 border-slate-700 border rounded-xl p-5 transition-colors hover:border-slate-600;
+}
+
+.geometric-border {
+  @apply border-slate-700;
+}
+
+/* Chat Styling */
+.message-ai {
+  @apply bg-slate-900 self-start rounded-xl rounded-bl-sm border border-slate-700;
+}
+
+.message-user {
+  @apply bg-sky-400 text-white self-end rounded-xl rounded-br-sm;
+}
+
+/* Map/Visual area */
+.map-view-bg {
+  @apply bg-[#111827] border border-slate-700 rounded-2xl relative overflow-hidden;
+}
+
+.heat-zone {
+  @apply absolute rounded-full blur-[20px] opacity-40;
+}
+

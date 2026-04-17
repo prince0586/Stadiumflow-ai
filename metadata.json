@@ -1,0 +1,6 @@
+{
+  "name": "StadiumFlow: Event Intelligence platform",
+  "description": "A Gemini-powered multi-agent system for real-time crowd movement, waiting time optimization, and high-performance stadium coordination.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}
